@@ -28,7 +28,7 @@ load_dotenv(dotenv_path=dotenv_path)
 
 # Use default project from credentials if not in .env
 _, project_id = google.auth.default()
-os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "data-agent-randrita")
+os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
 os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "global")
 os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
