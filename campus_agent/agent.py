@@ -1,10 +1,17 @@
 # Copyright 2025 Google LLC
+
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
-# You may not use this file except in compliance with the License.
+# you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import os
 from pathlib import Path
@@ -21,54 +28,50 @@ load_dotenv(dotenv_path=dotenv_path)
 
 # Use default project from credentials if not in .env
 _, project_id = google.auth.default()
-os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
+os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "data-agent-randrita")
 os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "global")
 os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
 logging_client = google_cloud_logging.Client()
 logger = logging_client.logger("campus-agent")
 
-
-def campus_help(question: str) -> dict:
-    """Returns a fun and helpful response for campus-related queries.
+def get_campus_info(query: str) -> dict:
+    """Provides information based on common campus-related queries.
 
     Args:
-        question (str): Student's question (e.g., "canteen", "wifi", "exam").
+        query (str): The user's question or keyword.
 
     Returns:
-        dict: A response message with campus humor.
+        dict: A dictionary containing the answer with a 'status' and either
+              a 'response' or 'error_message'.
     """
-    logger.log_text(f"Campus Help Invoked: {question}", severity="INFO")
+    logger.log_text(
+        f"--- Tool: get_campus_info called with query: {query} ---", severity="INFO"
+    )
 
-    q = question.lower()
+    q = query.lower()
 
-    if "library" in q:
-        return {"status": "success", "reply": "📚 Library timing: 9AM–5PM. AC chal raha hai... kabhi kabhi."}
+    # Mock campus data
+    campus_faq = {
+        "library": "📚 Library timing: 9AM–5PM. Aur haan, AC kabhi-kabhi kaam karta hai.",
+        "canteen": "🍜 Aaj ka canteen menu: Maggi, Chai... aur ek surprise item.",
+        "fees": "💰 Fees bharne ki last date: 15th August. Online portal se bhar sakte ho.",
+        "exam timetable": "📝 Exam timetable will be released next week on the notice board and online.",
+        "best canteen dish": "🥘 Maggi aur samosa sabse hit hain canteen mein!",
+    }
 
-    elif "canteen" in q or "menu" in q:
-        return {"status": "success", "reply": "🍜 Aaj ka menu: Maggi, samosa, aur disappointment."}
-
-    elif "exam" in q:
-        return {"status": "success", "reply": "😵 Exam tension? Bhai syllabus hi nahi mila abhi tak!"}
-
-    elif "wifi" in q:
-        return {"status": "success", "reply": "📶 WiFi: WhatsApp chalega, YouTube chhodo."}
-
-    elif "hostel" in q:
-        return {"status": "success", "reply": "🛏️ Hostel: Sapne bade hote hain, bathrooms chhote."}
-
-    elif "placement" in q:
-        return {"status": "success", "reply": "💼 Placement: Don’t worry, sabko ho jaata hai (almost)."}
+    for key in campus_faq:
+        if key in q:
+            return {"status": "success", "response": campus_faq[key]}
 
     return {
         "status": "error",
-        "reply": "🤖 Bhaiya/Bhenji, yeh bot sirf campus ke dukh-sukh ke liye hai. Try: library, canteen, exam, wifi, hostel, placement."
+        "error_message": f"Sorry, I don't have information for '{query}'. Try asking about library, canteen, fees, or exams.",
     }
 
-
-campus_agent = Agent(
+root_agent = Agent(
     name="campus_agent",
     model="gemini-2.5-flash",
-    instruction="You are a humorous and helpful campus bot that guides students with real-life tips, relatable answers, and a bit of fun.",
-    tools=[campus_help],
+    instruction="You are a friendly campus help assistant designed to answer common student queries accurately and informally.",
+    tools=[get_campus_info],
 )
